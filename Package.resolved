@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "MiniNe",
+        "repositoryURL": "https://github.com/kevcodex/MiniNe",
+        "state": {
+          "branch": null,
+          "revision": "f69cad55d6bfe74c114a5c37a1219e1cf9b951a8",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
