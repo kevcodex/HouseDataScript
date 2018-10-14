@@ -2,12 +2,30 @@
   "object": {
     "pins": [
       {
+        "package": "Kanna",
+        "repositoryURL": "https://github.com/tid-kijyun/Kanna.git",
+        "state": {
+          "branch": null,
+          "revision": "aec73a69619cf9bb540002a17793fb54633f372d",
+          "version": "4.0.2"
+        }
+      },
+      {
         "package": "MiniNe",
         "repositoryURL": "https://github.com/kevcodex/MiniNe",
         "state": {
           "branch": null,
           "revision": "f69cad55d6bfe74c114a5c37a1219e1cf9b951a8",
           "version": "1.0.0"
+        }
+      },
+      {
+        "package": "SwiftClibxml2",
+        "repositoryURL": "https://github.com/tid-kijyun/SwiftClibxml2.git",
+        "state": {
+          "branch": null,
+          "revision": "c4e67cc970273fc2bee978d12e422974ff184de7",
+          "version": "1.0.2"
         }
       }
     ]
