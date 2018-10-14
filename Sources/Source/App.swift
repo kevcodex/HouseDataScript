@@ -9,6 +9,11 @@ import MiniNe
 import Kanna
 
 public class App {
+    
+    static let jsonDecoder: JSONDecoder = {
+        return JSONDecoder()
+    }()
+    
     public static func start() {
         let client = MiniNeClient()
         let request = TruliaRequest(path: "/property-sitemap/CA/San-Diego-County-06073/92130/Carmel_Vista_Rd/")
@@ -49,7 +54,7 @@ public class App {
             let propertyRequest = TruliaRequest(path: houseURLPath)
             
             // TODO: - temp
-            if listingIds.count > 3 {
+            if listingIds.count > 0 {
                 break
             }
             
@@ -111,16 +116,22 @@ public class App {
                 switch result {
                     
                 case .success(let response):
-                    print(String(data: response.data, encoding: .utf8))
+                    do {
+                        let result = try App.jsonDecoder.decode(HouseMetadata.self,
+                                                                from: response.data)
+                        
+                        print(result)
+                    } catch {
+                        print(error)
+                    }
+                    
                 case .failure(let error):
                     print(error)
                 }
                 
                 runner.unlock()
             }
-            // prh
-            // sq
-            // address - sell type - year - sq ft-  bd - br - sell price
+
             runner.wait()
         }
     }
