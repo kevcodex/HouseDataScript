@@ -16,10 +16,10 @@ struct HouseMetadata: Codable {
         let street: String
         let apt: String?
         
-        let url: String?
+        let urlString: String?
         
-        let bed: Int
-        let bath: Int
+        let bed: Double
+        let bath: Double
         
         let priceHistorys: [PriceHistory]?
         
@@ -33,7 +33,7 @@ struct HouseMetadata: Codable {
             case street = "str"
             case apt
             
-            case url = "murl"
+            case urlString = "murl"
             
             case bed = "bd"
             case bath = "ba"
@@ -49,8 +49,8 @@ struct HouseMetadata: Codable {
             init(from decoder: Decoder) throws {
                 let values = try decoder.container(keyedBy: Keys.self)
                 
-                date = try values.decode(String.self, forKey: Keys.date)
-                price = try values.decode(String.self, forKey: Keys.price)
+                date = try values.decode(String.self, forKey: .date)
+                price = try values.decode(String.self, forKey: .price)
                 
                 let typeString = try values.decode(String.self, forKey: .eventType)
                 eventType = EventType(string: typeString)

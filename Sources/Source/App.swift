@@ -54,7 +54,7 @@ public class App {
             let propertyRequest = TruliaRequest(path: houseURLPath)
             
             // TODO: - temp
-            if listingIds.count > 0 {
+            if listingIds.count > 3 {
                 break
             }
             
@@ -70,12 +70,13 @@ public class App {
 
                     let reg = try? NSRegularExpression(pattern: pattern, options: [])
                     
+                    var newListingID = ""
+                    
                     if let match = reg?.firstMatch(
                         in: string,
                         options: [.withTransparentBounds],
                         range: NSRange(location: 0, length: string.count)),
                         let range = Range(match.range, in: string) {
-                        
                         
                         let rawListingID = String(string[range])
                         
@@ -83,9 +84,32 @@ public class App {
                         let listingID = rawListingID.replacingOccurrences(of: "'", with: "").replacingOccurrences(of: ",", with: "")
                         
                         if !listingID.isEmpty {
-                            listingIds.append(listingID)
+                            newListingID = listingID
                         }
                     }
+                    
+                    // backup regex, cleanup all of this
+//                    if newListingID.isEmpty {
+//                        
+//                        let backupPattern = "(?<=\"listingID\":)(.+?(?=,))"
+//                        
+//                        let regBackup = try? NSRegularExpression(pattern: backupPattern, options: [])
+//                        
+//                        if let match = regBackup?.firstMatch(
+//                            in: string,
+//                            options: [.withTransparentBounds],
+//                            range: NSRange(location: 0, length: string.count)),
+//                            let range = Range(match.range, in: string) {
+//                            
+//                            let rawListingID = String(string[range])
+//                            
+//                            if !rawListingID.isEmpty {
+//                                newListingID = rawListingID
+//                            }
+//                        }
+//                    }
+                    
+                    listingIds.append(newListingID)
          
                 case .failure(let error):
                     print(error)
@@ -99,7 +123,12 @@ public class App {
         
         // Make API call to get real info for each listing
         // Parse info
-        // Put info into
+        // Put info into CSV
+        
+        let workingDirectory = FileManager.default.currentDirectoryPath
+        let csvFilePath = workingDirectory + "/homeData.csv"
+        let csvFileURL = URL(fileURLWithPath: csvFilePath)
+        
         for listingID in listingIds {
             
             let parameters = ["id": listingID]
@@ -117,10 +146,35 @@ public class App {
                     
                 case .success(let response):
                     do {
-                        let result = try App.jsonDecoder.decode(HouseMetadata.self,
+                        let houseMetadata = try App.jsonDecoder.decode(HouseMetadata.self,
                                                                 from: response.data)
                         
-                        print(result)
+                        let result = houseMetadata.result
+                        
+                        if let priceHistorys = houseMetadata.result.priceHistorys {
+                            for priceHistory in priceHistorys {
+                                
+                                guard priceHistory.eventType == .sold else {
+                                    continue
+                                }
+                                // address - sell type - year - sq ft-  bd - br - sell price - url
+                                
+                                let address = result.fullStreetAddress
+                                let eventType = priceHistory.eventType ?? .unknown
+                                let year = priceHistory.date
+                                let sqft = result.sqft
+                                let bed = result.bed
+                                let bath = result.bath
+                                let sellPrice = priceHistory.price
+                                let url = result.urlString ?? ""
+                                
+                                let stringConvertibleArray: [CustomStringConvertible] = [address, eventType, year, sqft, bed, bath, sellPrice, url]
+                                    
+                                try CSVWriter.addNewRowWithItems(stringConvertibleArray, to: csvFileURL)
+                            }
+                        }
+                        
+
                     } catch {
                         print(error)
                     }

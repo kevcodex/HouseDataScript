@@ -57,7 +57,8 @@ struct CSVWriter {
     static func addNewRows(_ rows: [CustomStringConvertible], to url: URL) throws {
         
         for row in rows {
-            guard let data = row.description.data(using: .utf8) else {
+            let newRow = row.description + "\n"
+            guard let data = newRow.data(using: .utf8) else {
                 continue
             }
             
@@ -68,6 +69,34 @@ struct CSVWriter {
             } else {
                 try data.write(to: url, options: .atomic)
             }
+        }
+    }
+    
+    /// Add new row with items at the end of the file.
+    /// - parameter items: The new items to be added. Takes in any object that conforms to CustomStringConvertible.
+    /// - complexity: O(n) where n is the number of rows to add
+    static func addNewRowWithItems(_ items: [CustomStringConvertible], to url: URL) throws {
+        
+        var newRow = ""
+        for (index, item) in items.enumerated() {
+            if index == items.endIndex - 1 {
+                newRow.append(item.description + "\n")
+            } else {
+                newRow.append(item.description + ",")
+            }
+        }
+        
+        guard !newRow.isEmpty,
+            let data = newRow.data(using: .utf8) else {
+            return
+        }
+        
+        if let fileHandle = FileHandle(forWritingAtPath: url.path) {
+            fileHandle.seekToEndOfFile()
+            fileHandle.write(data)
+            fileHandle.closeFile()
+        } else {
+            try data.write(to: url, options: .atomic)
         }
     }
 }
