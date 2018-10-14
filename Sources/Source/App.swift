@@ -90,26 +90,28 @@ public class App {
                     
                     // backup regex, cleanup all of this
 //                    if newListingID.isEmpty {
-//                        
+//
 //                        let backupPattern = "(?<=\"listingID\":)(.+?(?=,))"
-//                        
+//
 //                        let regBackup = try? NSRegularExpression(pattern: backupPattern, options: [])
-//                        
+//
 //                        if let match = regBackup?.firstMatch(
 //                            in: string,
 //                            options: [.withTransparentBounds],
 //                            range: NSRange(location: 0, length: string.count)),
 //                            let range = Range(match.range, in: string) {
-//                            
+//
 //                            let rawListingID = String(string[range])
-//                            
+//
 //                            if !rawListingID.isEmpty {
 //                                newListingID = rawListingID
 //                            }
 //                        }
 //                    }
                     
-                    listingIds.append(newListingID)
+                    if !newListingID.isEmpty {
+                        listingIds.append(newListingID)
+                    }
          
                 case .failure(let error):
                     print(error)
@@ -162,9 +164,9 @@ public class App {
                                 let address = result.fullStreetAddress
                                 let eventType = priceHistory.eventType ?? .unknown
                                 let year = priceHistory.date
-                                let sqft = result.sqft
-                                let bed = result.bed
-                                let bath = result.bath
+                                let sqft = result.sqft ?? 0
+                                let bed = result.bed ?? 0
+                                let bath = result.bath ?? 0
                                 let sellPrice = priceHistory.price
                                 let url = result.urlString ?? ""
                                 

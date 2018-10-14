@@ -11,15 +11,15 @@ struct HouseMetadata: Codable {
     let result: Result
     
     struct Result: Codable {
-        let sqft: Int
+        let sqft: Int?
         let streetNumber: String
         let street: String
         let apt: String?
         
         let urlString: String?
         
-        let bed: Double
-        let bath: Double
+        let bed: Double?
+        let bath: Double?
         
         let priceHistorys: [PriceHistory]?
         
