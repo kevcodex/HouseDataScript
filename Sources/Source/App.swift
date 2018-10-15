@@ -14,16 +14,14 @@ public class App {
         return JSONDecoder()
     }()
     
-    public static func start() {
-        let client = MiniNeClient()
+    public init() { }
+    
+    public func start() {
         let request = TruliaRequest(path: "/property-sitemap/CA/San-Diego-County-06073/92130/Carmel_Vista_Rd/")
         
-        let runner = SwiftScriptRunner()
-        
         // Get all the properties list
-        runner.lock()
         var urlStringPaths: [String] = []
-        client.send(request: request) { (result) in
+        sendRequest(request) { (result) in
             switch result {
                 
             case .success(let response):
@@ -39,12 +37,7 @@ public class App {
             case .failure(let error):
                 print(error)
             }
-            
-            runner.unlock()
         }
-        
-        runner.wait()
-        
         
         // Fetch listing ID for each property
         
@@ -58,8 +51,7 @@ public class App {
                 break
             }
             
-            runner.lock()
-            client.send(request: propertyRequest) { (result) in
+            sendRequest(propertyRequest) { (result) in
                 
                 switch result {
                     
@@ -116,11 +108,7 @@ public class App {
                 case .failure(let error):
                     print(error)
                 }
-                
-                runner.unlock()
             }
-            
-            runner.wait()
         }
         
         // Make API call to get real info for each listing
@@ -141,9 +129,8 @@ public class App {
                                            parameters: parameters,
                                            headers: headers)
             
-            runner.lock()
             
-            client.send(request: request) { (result) in
+            sendRequest(request) { (result) in
                 switch result {
                     
                 case .success(let response):
@@ -184,12 +171,40 @@ public class App {
                 case .failure(let error):
                     print(error)
                 }
-                
-                runner.unlock()
             }
-
-            runner.wait()
         }
+    }
+    
+    /// Perform some async block without the script finishing.
+    /// Call completion when async block is done
+    private func performBlockingAsyncMethod( asyncBlock: (_ completion: @escaping () -> Void) -> Void) {
+        let runner = SwiftScriptRunner()
+        runner.lock()
+        
+        asyncBlock {
+            runner.unlock()
+        }
+        
+        runner.wait()
+    }
+    
+    /// Send network request async and block until done
+    private func sendRequest<Request: NetworkRequest>(_ request: Request,
+                                                      completion: @escaping (Result<Response, MiniNeError>) -> Void) {
+        
+        let runner = SwiftScriptRunner()
+        let client = MiniNeClient()
+        
+        runner.lock()
+        
+        client.send(request: request) { (result) in
+            
+            completion(result)
+            
+            runner.unlock()
+        }
+        
+        runner.wait()
     }
 }
 

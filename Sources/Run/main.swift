@@ -9,4 +9,4 @@
 
 import Source
 
-App.start()
+App().start()
