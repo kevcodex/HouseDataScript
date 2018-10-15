@@ -20,6 +20,15 @@
         }
       },
       {
+        "package": "ScriptHelpers",
+        "repositoryURL": "https://github.com/kevcodex/ScriptHelpers",
+        "state": {
+          "branch": null,
+          "revision": "7f84366673872d93776f40fda5129f88d86ce214",
+          "version": "1.1.0"
+        }
+      },
+      {
         "package": "SwiftClibxml2",
         "repositoryURL": "https://github.com/tid-kijyun/SwiftClibxml2.git",
         "state": {
