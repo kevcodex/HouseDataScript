@@ -29,8 +29,14 @@ open class SwiftScriptRunner {
     
     /// Wait for all locks to unlock
     open func wait() {
+        #if os(Linux)
+        let mode = RunLoopMode.defaultRunLoopMode
+        #else
+        let mode = RunLoop.Mode.default
+        #endif
+        
         while count > 0 &&
-            runLoop.run(mode: .default, before: Date(timeIntervalSinceNow: 0.1)) {
+            runLoop.run(mode: mode, before: Date(timeIntervalSinceNow: 0.1)) {
                 // Run, run, run
         }
     }
