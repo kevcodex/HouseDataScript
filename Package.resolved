@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/kevcodex/MiniNe",
         "state": {
           "branch": null,
-          "revision": "f69cad55d6bfe74c114a5c37a1219e1cf9b951a8",
-          "version": "1.0.0"
+          "revision": "b8452e628c7b06db9e881a6e764ca4bb5fa78f95",
+          "version": "1.1.0"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/kevcodex/ScriptHelpers",
         "state": {
           "branch": null,
-          "revision": "7f84366673872d93776f40fda5129f88d86ce214",
-          "version": "1.1.0"
+          "revision": "7ba25f2eda17bbbb11201602ad81dd2ddf0e700d",
+          "version": "1.2.0"
         }
       },
       {
