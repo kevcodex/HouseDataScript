@@ -86,79 +86,49 @@ extension App {
     /// - Parameter urlStringPaths: All the url string paths (not including the base path).
     /// - Parameter maxCount: The maximum amount of ids to fetch. Set to limited with specified count in which only that amount will be fetched
     func fetchListingIDs(urlStringPaths: [String], maxCount: MaxCount = .all) -> [String]? {
+        let operationQueue = OperationQueue()
+        operationQueue.maxConcurrentOperationCount = 5
         
         var listingIds: [String] = []
         
-        for houseURLPath in urlStringPaths {
-            let propertyRequest = TruliaRequest(path: houseURLPath)
-            
+        for (index, houseURLPath) in urlStringPaths.enumerated() {
+        
+            // TODO: Find fix where we can cancel all operations properly
+            // Some issues where cancel all operations breaks
             if case let MaxCount.limited(count) = maxCount {
-                if listingIds.count >= count {
+                if index >= count {
                     break
                 }
             }
             
-            sendRequest(propertyRequest) { (result) in
+            let fetchListingIDOperation = FetchListingIDOperation(houseURLPath: houseURLPath)
+            
+            let completionBlock = BlockOperation()
+            
+            completionBlock.addExecutionBlock { [weak fetchListingIDOperation] in
+                guard let result = fetchListingIDOperation?.result else {
+                    return
+                }
                 
                 switch result {
                     
-                case .success(let response):
-                    let string = String(data: response.data, encoding: .utf8) ?? ""
-                    
-                    let pattern = "(?<=listingId:\\s)(\\S+)"
-                    
-                    let reg = try? NSRegularExpression(pattern: pattern, options: [])
-                    
-                    var newListingID = ""
-                    
-                    if let match = reg?.firstMatch(
-                        in: string,
-                        options: [.withTransparentBounds],
-                        range: NSRange(location: 0, length: string.count)),
-                        let range = Range(match.range, in: string) {
-                        
-                        let rawListingID = String(string[range])
-                        
-                        // TODO: - Fix
-                        let listingID = rawListingID.replacingOccurrences(of: "'", with: "").replacingOccurrences(of: ",", with: "")
-                        
-                        if !listingID.isEmpty {
-                            newListingID = listingID
-                        }
-                    }
-                    
-                    // backup regex, cleanup all of this
-                    //                    if newListingID.isEmpty {
-                    //
-                    //                        let backupPattern = "(?<=\"listingID\":)(.+?(?=,))"
-                    //
-                    //                        let regBackup = try? NSRegularExpression(pattern: backupPattern, options: [])
-                    //
-                    //                        if let match = regBackup?.firstMatch(
-                    //                            in: string,
-                    //                            options: [.withTransparentBounds],
-                    //                            range: NSRange(location: 0, length: string.count)),
-                    //                            let range = Range(match.range, in: string) {
-                    //
-                    //                            let rawListingID = String(string[range])
-                    //
-                    //                            if !rawListingID.isEmpty {
-                    //                                newListingID = rawListingID
-                    //                            }
-                    //                        }
-                    //                    }
-                    
-                    if !newListingID.isEmpty {
-                        listingIds.append(newListingID)
-                    }
-                    
+                case .success(let listingID):
+                    listingIds.append(listingID)
                 case .failure(let error):
                     print(error)
                 }
             }
+            
+            completionBlock.addDependency(fetchListingIDOperation)
+            
+            operationQueue.addOperations([fetchListingIDOperation,
+                                          completionBlock],
+                                         waitUntilFinished: false)
         }
         
-        return listingIds.nonEmpty
+        operationQueue.waitUntilAllOperationsAreFinished()
+        
+        return listingIds
     }
     
     func fetchAllHouseMetadata(listingIDs: [String]) -> [HouseMetadata]? {
@@ -277,3 +247,84 @@ extension App {
     }
 }
 
+
+
+
+/// Fetch all the listing ids which is obtained from the raw html in link.
+/// - Parameter urlStringPaths: All the url string paths (not including the base path).
+/// - Parameter maxCount: The maximum amount of ids to fetch. Set to limited with specified count in which only that amount will be fetched
+//    func fetchListingIDs(urlStringPaths: [String], maxCount: MaxCount = .all) -> [String]? {
+//
+//        var listingIds: [String] = []
+//
+//        for houseURLPath in urlStringPaths {
+//            let propertyRequest = TruliaRequest(path: houseURLPath)
+//
+//            if case let MaxCount.limited(count) = maxCount {
+//                if listingIds.count >= count {
+//                    break
+//                }
+//            }
+//
+//            sendRequest(propertyRequest) { (result) in
+//
+//                switch result {
+//
+//                case .success(let response):
+//                    let string = String(data: response.data, encoding: .utf8) ?? ""
+//
+//                    let pattern = "(?<=listingId:\\s)(\\S+)"
+//
+//                    let reg = try? NSRegularExpression(pattern: pattern, options: [])
+//
+//                    var newListingID = ""
+//
+//                    if let match = reg?.firstMatch(
+//                        in: string,
+//                        options: [.withTransparentBounds],
+//                        range: NSRange(location: 0, length: string.count)),
+//                        let range = Range(match.range, in: string) {
+//
+//                        let rawListingID = String(string[range])
+//
+//                        // TODO: - Fix
+//                        let listingID = rawListingID.replacingOccurrences(of: "'", with: "").replacingOccurrences(of: ",", with: "")
+//
+//                        if !listingID.isEmpty {
+//                            newListingID = listingID
+//                        }
+//                    }
+//
+//                    // backup regex, cleanup all of this
+//                    //                    if newListingID.isEmpty {
+//                    //
+//                    //                        let backupPattern = "(?<=\"listingID\":)(.+?(?=,))"
+//                    //
+//                    //                        let regBackup = try? NSRegularExpression(pattern: backupPattern, options: [])
+//                    //
+//                    //                        if let match = regBackup?.firstMatch(
+//                    //                            in: string,
+//                    //                            options: [.withTransparentBounds],
+//                    //                            range: NSRange(location: 0, length: string.count)),
+//                    //                            let range = Range(match.range, in: string) {
+//                    //
+//                    //                            let rawListingID = String(string[range])
+//                    //
+//                    //                            if !rawListingID.isEmpty {
+//                    //                                newListingID = rawListingID
+//                    //                            }
+//                    //                        }
+//                    //                    }
+//
+//                    if !newListingID.isEmpty {
+//                        listingIds.append(newListingID)
+//                    }
+//
+//                case .failure(let error):
+//                    print(error)
+//                }
+//            }
+//        }
+//
+//        return listingIds.nonEmpty
+//    }
