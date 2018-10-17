@@ -29,7 +29,7 @@ public class App {
         // MARK: - Fetch listing ID for each property
         Console.writeMessage("**Fetching all listing IDs")
         guard let listingIDs = fetchListingIDs(urlStringPaths: urlStringPaths,
-                                               maxCount: .limited(count: 2)) else {
+                                               maxCount: .limited(count: 5)) else {
             Console.writeMessage("Failed to get any listing IDs", styled: .red)
             exit(1)
         }
@@ -91,23 +91,20 @@ extension App {
         
         var listingIds: [String] = []
         
-        for (index, houseURLPath) in urlStringPaths.enumerated() {
-        
-            // TODO: Find fix where we can cancel all operations properly
-            // Some issues where cancel all operations breaks
-            if case let MaxCount.limited(count) = maxCount {
-                if index >= count {
-                    break
-                }
-            }
-            
+        for houseURLPath in urlStringPaths {
+
             let fetchListingIDOperation = FetchListingIDOperation(houseURLPath: houseURLPath)
             
-            let completionBlock = BlockOperation()
-            
-            completionBlock.addExecutionBlock { [weak fetchListingIDOperation] in
+            let completionBlock = BlockOperation { [weak fetchListingIDOperation] in
                 guard let result = fetchListingIDOperation?.result else {
                     return
+                }
+                
+                if case let MaxCount.limited(count) = maxCount {
+                    if listingIds.count >= count {
+                        operationQueue.cancelAllOperations()
+                        return
+                    }
                 }
                 
                 switch result {

@@ -11,12 +11,14 @@ import Foundation
 
 class FetchListingIDOperation: AsyncOperation {
     
+    // Inputs
     let houseURLPath: String
     
-    // Inputs
     init(houseURLPath: String) {
         self.houseURLPath = houseURLPath
     }
+    
+    private let client = MiniNeClient()
     
     // Outputs
     var result: Result<String, MiniNeError>?
@@ -28,12 +30,12 @@ class FetchListingIDOperation: AsyncOperation {
             return
         }
         
-        let client = MiniNeClient()
         let request = TruliaRequest(path: houseURLPath)
         
         client.send(request: request) { [weak self] (result) in
             
-            guard let strongSelf = self else {
+            guard let strongSelf = self, strongSelf.canExecute() else {
+                self?.finish()
                 return
             }
             
@@ -47,10 +49,9 @@ class FetchListingIDOperation: AsyncOperation {
                 let reg = try? NSRegularExpression(pattern: pattern, options: [])
                 
                 
-                if let match = reg?.firstMatch(
-                    in: string,
-                    options: [.withTransparentBounds],
-                    range: NSRange(location: 0, length: string.count)),
+                if let match = reg?.firstMatch(in: string,
+                                               options: [.withTransparentBounds],
+                                               range: NSRange(location: 0, length: string.count)),
                     let range = Range(match.range, in: string) {
                     
                     let rawListingID = String(string[range])
@@ -69,5 +70,11 @@ class FetchListingIDOperation: AsyncOperation {
             
             strongSelf.finish()
         }
+    }
+    
+    override func cancel() {
+        client.invalidateAndCancel()
+
+        super.cancel()
     }
 }
