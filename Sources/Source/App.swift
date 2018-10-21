@@ -125,43 +125,42 @@ extension App {
         
         operationQueue.waitUntilAllOperationsAreFinished()
         
-        return listingIds
+        return listingIds.nonEmpty
     }
     
     func fetchAllHouseMetadata(listingIDs: [String]) -> [HouseMetadata]? {
+        
+        let operationQueue = OperationQueue()
+        operationQueue.maxConcurrentOperationCount = 5
         
         var houseMetadatas: [HouseMetadata] = []
         
         for listingID in listingIDs {
             
-            let parameters = ["id": listingID]
-            let headers = ["User-Agent": "tr-src/IphoneApp tr-ver/11.0 tr-osv/12.0"]
+            let fetchHouseMetadata = FetchHouseMetadataOperation(listingID: listingID)
             
-            let request = TruliaAPIRequest(path: "/app/v8/detail",
-                                           method: .get,
-                                           parameters: parameters,
-                                           headers: headers)
-            
-            
-            sendRequest(request) { (result) in
+            let completionBlock = BlockOperation { [weak fetchHouseMetadata] in
+                guard let result = fetchHouseMetadata?.result else {
+                    return
+                }
+                
                 switch result {
                     
-                case .success(let response):
-                    do {
-                        let houseMetadata = try App.jsonDecoder.decode(HouseMetadata.self,
-                                                                       from: response.data)
-                        
-                        houseMetadatas.append(houseMetadata)
-                        
-                    } catch {
-                        print(error)
-                    }
-                    
+                case .success(let metadata):
+                    houseMetadatas.append(metadata)
                 case .failure(let error):
                     print(error)
                 }
             }
+            
+            completionBlock.addDependency(fetchHouseMetadata)
+            
+            operationQueue.addOperations([fetchHouseMetadata,
+                                          completionBlock],
+                                         waitUntilFinished: false)
         }
+        
+        operationQueue.waitUntilAllOperationsAreFinished()
         
         return houseMetadatas.nonEmpty
     }
